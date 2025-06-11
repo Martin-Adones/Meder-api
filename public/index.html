@@ -2,66 +2,42 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Dispositivos Mender</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    table { border-collapse: collapse; width: 100%; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-    th { background-color: #f4f4f4; }
-  </style>
+  <title>Registrar dispositivo en Mender</title>
 </head>
 <body>
-  <h1>Lista de dispositivos Mender</h1>
-  <table id="devices-table">
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Artifact Name</th>
-        <th>Device Type</th>
-        <th>Status</th>
-        <th>Última actualización</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+  <h1>Registrar este dispositivo en Mender</h1>
+  <label for="token">Ingresa tu Tenant Token:</label><br/>
+  <input type="text" id="token" size="80" placeholder="Coloca aquí el Tenant Token"/><br/><br/>
+  <button onclick="register()">Registrar</button>
+  <p id="result"></p>
 
   <script>
-    async function fetchDevices() {
+    async function register() {
+      const tenantToken = document.getElementById('token').value.trim();
+
+      if (!tenantToken) {
+        document.getElementById('result').textContent = 'Por favor, ingresa un Tenant Token válido.';
+        return;
+      }
+
       try {
-        const token = prompt("Ingresa tu token JWT de sesión:");
-        const res = await fetch('/api/devices', {
-          headers: {
-            'Authorization': 'Bearer ' + token
-          }
+        const res = await fetch('/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tenantToken })
         });
-        if (!res.ok) throw new Error('Error al obtener dispositivos');
-        const devices = await res.json();
 
-        const tbody = document.querySelector('#devices-table tbody');
-        tbody.innerHTML = '';
+        const data = await res.json();
 
-        devices.forEach(device => {
-          const artifact = device.attributes.find(a => a.name === 'artifact_name')?.value || '-';
-          const type = device.attributes.find(a => a.name === 'device_type')?.value || '-';
-          const status = device.attributes.find(a => a.name === 'status')?.value || '-';
-          const updated = device.updated_ts || '-';
-
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td>${device.id}</td>
-            <td>${artifact}</td>
-            <td>${type}</td>
-            <td>${status}</td>
-            <td>${updated}</td>
-          `;
-          tbody.appendChild(tr);
-        });
+        if (res.ok) {
+          document.getElementById('result').textContent = data.message || 'Dispositivo registrado correctamente.';
+        } else {
+          document.getElementById('result').textContent = data.error || 'Error desconocido.';
+        }
       } catch (err) {
-        alert(err.message);
+        document.getElementById('result').textContent = 'Error: ' + err.message;
       }
     }
-
-    fetchDevices();
   </script>
 </body>
 </html>
