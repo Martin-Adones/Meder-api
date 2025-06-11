@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Dispositivos Mender</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background-color: #f4f4f4; }
+  </style>
+</head>
+<body>
+  <h1>Lista de dispositivos Mender</h1>
+  <table id="devices-table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Artifact Name</th>
+        <th>Device Type</th>
+        <th>Status</th>
+        <th>Última actualización</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    async function fetchDevices() {
+      try {
+        const token = prompt("Ingresa tu token JWT de sesión:");
+        const res = await fetch('/api/devices', {
+          headers: {
+            'Authorization': 'Bearer ' + token
+          }
+        });
+        if (!res.ok) throw new Error('Error al obtener dispositivos');
+        const devices = await res.json();
+
+        const tbody = document.querySelector('#devices-table tbody');
+        tbody.innerHTML = '';
+
+        devices.forEach(device => {
+          const artifact = device.attributes.find(a => a.name === 'artifact_name')?.value || '-';
+          const type = device.attributes.find(a => a.name === 'device_type')?.value || '-';
+          const status = device.attributes.find(a => a.name === 'status')?.value || '-';
+          const updated = device.updated_ts || '-';
+
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${device.id}</td>
+            <td>${artifact}</td>
+            <td>${type}</td>
+            <td>${status}</td>
+            <td>${updated}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    fetchDevices();
+  </script>
+</body>
+</html>
