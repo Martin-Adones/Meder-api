@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Prueba de Tokens e Información del Dispositivo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .section {
+            flex: 1;
+            min-width: 300px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            background-color: #f9f9f9;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        button {
+            padding: 8px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px 0;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            box-sizing: border-box;
+        }
+        .info-section {
+            margin-top: 20px;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .info-card {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+    <h1>Prueba de Tokens e Información del Dispositivo</h1>
+    
+    <div class="container">
+        <div class="section">
+            <h2>Generar Token</h2>
+            <div>
+                <label for="deviceId">ID del Dispositivo:</label>
+                <input type="text" id="deviceId" placeholder="Ingrese el ID del dispositivo">
+            </div>
+            <div>
+                <label for="tipoDispositivo">Tipo de Dispositivo:</label>
+                <input type="text" id="tipoDispositivo" placeholder="Ingrese el tipo de dispositivo">
+            </div>
+            <button onclick="generarToken()">Generar Token</button>
+            <div id="tokenResult" class="result"></div>
+        </div>
+
+        <div class="section">
+            <h2>Validar Token</h2>
+            <div>
+                <label for="tokenToValidate">Token a Validar:</label>
+                <input type="text" id="tokenToValidate" placeholder="Ingrese el token a validar">
+            </div>
+            <button onclick="validarToken()">Validar Token</button>
+            <div id="validationResult" class="result"></div>
+        </div>
+    </div>
+
+    <div class="section info-section">
+        <h2>Información del Dispositivo</h2>
+        <button onclick="obtenerInfoDispositivo()">Obtener Información</button>
+        <div id="deviceInfo" class="result"></div>
+    </div>
+
+    <script>
+        async function generarToken() {
+            const deviceId = document.getElementById('deviceId').value;
+            const tipoDispositivo = document.getElementById('tipoDispositivo').value;
+
+            if (!deviceId || !tipoDispositivo) {
+                document.getElementById('tokenResult').textContent = 'Por favor, complete todos los campos';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/device/token', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ deviceId, tipoDispositivo })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('tokenResult').textContent = `Token generado: ${data.token}`;
+                    document.getElementById('tokenToValidate').value = data.token;
+                } else {
+                    document.getElementById('tokenResult').textContent = `Error: ${data.mensaje}`;
+                }
+            } catch (error) {
+                document.getElementById('tokenResult').textContent = `Error: ${error.message}`;
+            }
+        }
+
+        async function validarToken() {
+            const token = document.getElementById('tokenToValidate').value;
+
+            if (!token) {
+                document.getElementById('validationResult').textContent = 'Por favor, ingrese un token';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/device/validate', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('validationResult').textContent = 
+                        `Token válido\nPayload: ${JSON.stringify(data.payload, null, 2)}`;
+                } else {
+                    document.getElementById('validationResult').textContent = `Error: ${data.mensaje}`;
+                }
+            } catch (error) {
+                document.getElementById('validationResult').textContent = `Error: ${error.message}`;
+            }
+        }
+
+        async function obtenerInfoDispositivo() {
+            try {
+                const response = await fetch('/api/device/info');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    let infoHTML = '<div class="info-grid">';
+                    
+                    // Información del Sistema Operativo
+                    infoHTML += `
+                        <div class="info-card">
+                            <h3>Sistema Operativo</h3>
+                            <p><strong>Nombre:</strong> ${data.sistemaOperativo.nombre}</p>
+                            <p><strong>Versión:</strong> ${data.sistemaOperativo.version}</p>
+                            <p><strong>Tipo:</strong> ${data.sistemaOperativo.tipo}</p>
+                            <p><strong>Arquitectura:</strong> ${data.sistemaOperativo.arquitectura}</p>
+                            <p><strong>Hostname:</strong> ${data.sistemaOperativo.hostname}</p>
+                        </div>
+                    `;
+
+                    // Información de Red
+                    data.red.forEach(interface => {
+                        infoHTML += `
+                            <div class="info-card">
+                                <h3>Interfaz: ${interface.interface}</h3>
+                                <p><strong>IP:</strong> ${interface.ip}</p>
+                                <p><strong>MAC:</strong> ${interface.mac}</p>
+                                <p><strong>Máscara:</strong> ${interface.netmask}</p>
+                            </div>
+                        `;
+                    });
+
+                    // Información de Hardware
+                    infoHTML += `
+                        <div class="info-card">
+                            <h3>Hardware</h3>
+                            <p><strong>Memoria Total:</strong> ${data.hardware.memoriaTotal}</p>
+                            <p><strong>Memoria Libre:</strong> ${data.hardware.memoriaLibre}</p>
+                            <p><strong>Procesadores:</strong> ${data.hardware.procesadores}</p>
+                        </div>
+                    `;
+
+                    infoHTML += '</div>';
+                    document.getElementById('deviceInfo').innerHTML = infoHTML;
+                } else {
+                    document.getElementById('deviceInfo').textContent = `Error: ${data.error}`;
+                }
+            } catch (error) {
+                document.getElementById('deviceInfo').textContent = `Error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html> 

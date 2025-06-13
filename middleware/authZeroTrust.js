@@ -12,12 +12,11 @@ module.exports = async (req, res, next) => {
   try {
     // Validar token de usuario (local o WSO2)
     const userPayload = jwt.verify(userToken, process.env.JWT_SECRET);
-    // Validar token de dispositivo (puedes usar lógica similar o WSO2 si aplica)
+    // Validar token de dispositivo
     const devicePayload = jwt.verify(deviceToken, process.env.JWT_SECRET);
 
-    // Aquí podrías hacer una llamada al access point/control de políticas
-    // Simulación: Si ambos tokens son válidos, permitir acceso
-    req.user = userPayload;
+    // En lugar de devolver el usuario, devolvemos el token del dispositivo
+    req.deviceToken = deviceToken;
     req.device = devicePayload;
     next();
   } catch (err) {

@@ -1,4 +1,5 @@
 const jwtService = require('../middleware/jwtService');
+const jwt = require('jsonwebtoken');
 
 exports.generarTokenDispositivo = (req, res) => {
   const { deviceId, tipoDispositivo } = req.body;
@@ -23,7 +24,7 @@ exports.validarTokenDispositivo = (req, res) => {
     return res.status(401).json({ mensaje: 'Formato de Authorization incorrecto.' });
   }
   try {
-    const payload = jwtService.crearToken(token);
+    const payload = jwt.verify(token, process.env.JWT_SECRET);
     return res.status(200).json({ valido: true, payload });
   } catch (error) {
     return res.status(401).json({ valido: false, mensaje: 'Token inválido o expirado.', error: error.message });
