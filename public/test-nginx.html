@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Prueba Nginx + API</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; background: #f4f4f4; }
+    .container { background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px #ccc; max-width: 500px; margin: auto; }
+    button { padding: 10px 20px; font-size: 16px; }
+    #result { margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>¡Nginx funciona!</h1>
+    <p>Haz clic en el botón para probar la conexión con la API <code>/api/devices</code>:</p>
+    <button onclick="probarAPI()">Probar API</button>
+    <div id="result"></div>
+  </div>
+  <script>
+    async function probarAPI() {
+      document.getElementById('result').textContent = 'Consultando...';
+      try {
+        const res = await fetch('/api/devices');
+        const data = await res.json();
+        document.getElementById('result').textContent = 'Respuesta: ' + JSON.stringify(data);
+      } catch (err) {
+        document.getElementById('result').textContent = 'Error: ' + err.message;
+      }
+    }
+  </script>
+</body>
+</html> 
