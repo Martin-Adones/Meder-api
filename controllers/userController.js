@@ -1,12 +1,12 @@
 const jwtService = require('../middleware/jwtService');
 
 exports.generarTokenUsuario = (req, res) => {
-  const { usuario, rol } = req.body;
-  if (!usuario || !rol) {
-    return res.status(400).json({ mensaje: 'Faltan datos requeridos: usuario y rol.' });
+  const { mail, password, rol, lugar, navegador, fecha } = req.body;
+  if (!mail || !password || !rol || !lugar || !navegador || !fecha) {
+    return res.status(400).json({ mensaje: 'Faltan datos requeridos: mail, password, rol, lugar, navegador, fecha.' });
   }
   try {
-    const token = jwtService.crearToken({ usuario, rol, tipo: 'usuario' });
+    const token = jwtService.crearToken({ mail, password, rol, lugar, navegador, fecha, tipo: 'usuario' });
     return res.status(200).json({ token });
   } catch (error) {
     return res.status(500).json({ mensaje: 'Error al generar el token de usuario.', error: error.message });
@@ -28,4 +28,4 @@ exports.validarTokenUsuario = (req, res) => {
   } catch (error) {
     return res.status(401).json({ valido: false, mensaje: 'Token inválido o expirado.', error: error.message });
   }
-}; 
+};
