@@ -3,6 +3,9 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const app = express();
 const deviceRoutes = require('./routes/devices');
+const authRoutes = require('./routes/auth');
+const userRoutes = require('./routes/user');
+const deviceRoutes = require('./routes/device');
 
 app.use(express.json());
 app.use(express.static('public'));
@@ -16,6 +19,9 @@ app.post('/login', (req, res) => {
 
 // Rutas protegidas
 app.use('/api/devices', deviceRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/user', userRoutes);
+app.use('/api/device', deviceRoutes);
 
 app.listen(process.env.PORT, () => {
   console.log(`Servidor corriendo en el puerto ${process.env.PORT}`);

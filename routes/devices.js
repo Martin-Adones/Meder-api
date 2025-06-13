@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
-const verifyToken = require('../middleware/auth');
+const verifyZeroTrust = require('../middleware/authZeroTrust');
 
-router.get('/', verifyToken, async (req, res) => {
+router.get('/', verifyZeroTrust, async (req, res) => {
   try {
     const response = await fetch(`${process.env.MENDER_URL}/api/management/v1/inventory/devices`, {
       headers: {
