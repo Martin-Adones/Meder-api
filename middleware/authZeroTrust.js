@@ -1,7 +1,6 @@
 const jwt = require('jsonwebtoken');
-const jwtService = require('./jwtService');
 
-module.exports = async (req, res, next) => {
+module.exports = (req, res, next) => {
   const userToken = req.header('User-Authorization')?.split(' ')[1];
   const deviceToken = req.header('Device-Authorization')?.split(' ')[1];
 
@@ -10,13 +9,10 @@ module.exports = async (req, res, next) => {
   }
 
   try {
-    // Validar token de usuario (local o WSO2)
     const userPayload = jwt.verify(userToken, process.env.JWT_SECRET);
-    // Validar token de dispositivo
     const devicePayload = jwt.verify(deviceToken, process.env.JWT_SECRET);
 
-    // En lugar de devolver el usuario, devolvemos el token del dispositivo
-    req.deviceToken = deviceToken;
+    req.user = userPayload;
     req.device = devicePayload;
     next();
   } catch (err) {

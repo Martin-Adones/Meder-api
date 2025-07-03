@@ -2,216 +2,67 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Prueba de Tokens e Información del Dispositivo</title>
+    <title>Prueba Zero Trust</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-        }
-        .section {
-            flex: 1;
-            min-width: 300px;
-            padding: 20px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-        .result {
-            margin-top: 10px;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 3px;
-            background-color: #f9f9f9;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-        }
-        button {
-            padding: 8px 15px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            margin: 5px 0;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-        input {
-            width: 100%;
-            padding: 8px;
-            margin: 5px 0;
-            box-sizing: border-box;
-        }
-        .info-section {
-            margin-top: 20px;
-        }
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 10px;
-            margin-top: 10px;
-        }
-        .info-card {
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            background-color: #f9f9f9;
-        }
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 30px auto; }
+        input, button { margin: 5px 0; width: 100%; padding: 8px; }
+        .result { background: #f4f4f4; padding: 10px; border-radius: 4px; margin-top: 10px; }
     </style>
 </head>
 <body>
-    <h1>Prueba de Tokens e Información del Dispositivo</h1>
-    
-    <div class="container">
-        <div class="section">
-            <h2>Generar Token</h2>
-            <div>
-                <label for="deviceId">ID del Dispositivo:</label>
-                <input type="text" id="deviceId" placeholder="Ingrese el ID del dispositivo">
-            </div>
-            <div>
-                <label for="tipoDispositivo">Tipo de Dispositivo:</label>
-                <input type="text" id="tipoDispositivo" placeholder="Ingrese el tipo de dispositivo">
-            </div>
-            <button onclick="generarToken()">Generar Token</button>
-            <div id="tokenResult" class="result"></div>
-        </div>
+    <h1>Prueba Zero Trust</h1>
 
-        <div class="section">
-            <h2>Validar Token</h2>
-            <div>
-                <label for="tokenToValidate">Token a Validar:</label>
-                <input type="text" id="tokenToValidate" placeholder="Ingrese el token a validar">
-            </div>
-            <button onclick="validarToken()">Validar Token</button>
-            <div id="validationResult" class="result"></div>
-        </div>
-    </div>
+    <h2>Generar Token de Usuario</h2>
+    <button onclick="generarTokenUsuario()">Generar Token Usuario</button>
+    <div id="tokenUsuario" class="result"></div>
 
-    <div class="section info-section">
-        <h2>Información del Dispositivo</h2>
-        <button onclick="obtenerInfoDispositivo()">Obtener Información</button>
-        <div id="deviceInfo" class="result"></div>
-    </div>
+    <h2>Generar Token de Dispositivo</h2>
+    <input type="text" id="deviceId" placeholder="ID del dispositivo" />
+    <input type="text" id="deviceType" placeholder="Tipo de dispositivo" />
+    <button onclick="generarTokenDispositivo()">Generar Token Dispositivo</button>
+    <div id="tokenDispositivo" class="result"></div>
+
+    <h2>Probar Acceso Protegido</h2>
+    <button onclick="probarZeroTrust()">Probar /api/devices</button>
+    <div id="respuestaProtegida" class="result"></div>
 
     <script>
-        async function generarToken() {
-            const deviceId = document.getElementById('deviceId').value;
-            const tipoDispositivo = document.getElementById('tipoDispositivo').value;
+        let tokenUsuario = '';
+        let tokenDispositivo = '';
 
-            if (!deviceId || !tipoDispositivo) {
-                document.getElementById('tokenResult').textContent = 'Por favor, complete todos los campos';
-                return;
-            }
-
-            try {
-                const response = await fetch('/api/device/token', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ deviceId, tipoDispositivo })
-                });
-
-                const data = await response.json();
-                
-                if (response.ok) {
-                    document.getElementById('tokenResult').textContent = `Token generado: ${data.token}`;
-                    document.getElementById('tokenToValidate').value = data.token;
-                } else {
-                    document.getElementById('tokenResult').textContent = `Error: ${data.mensaje}`;
-                }
-            } catch (error) {
-                document.getElementById('tokenResult').textContent = `Error: ${error.message}`;
-            }
+        async function generarTokenUsuario() {
+            const res = await fetch('/login', { method: 'POST' });
+            const data = await res.json();
+            tokenUsuario = data.token;
+            document.getElementById('tokenUsuario').textContent = tokenUsuario;
         }
 
-        async function validarToken() {
-            const token = document.getElementById('tokenToValidate').value;
-
-            if (!token) {
-                document.getElementById('validationResult').textContent = 'Por favor, ingrese un token';
-                return;
-            }
-
-            try {
-                const response = await fetch('/api/device/validate', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-
-                const data = await response.json();
-                
-                if (response.ok) {
-                    document.getElementById('validationResult').textContent = 
-                        `Token válido\nPayload: ${JSON.stringify(data.payload, null, 2)}`;
-                } else {
-                    document.getElementById('validationResult').textContent = `Error: ${data.mensaje}`;
-                }
-            } catch (error) {
-                document.getElementById('validationResult').textContent = `Error: ${error.message}`;
-            }
+        async function generarTokenDispositivo() {
+            const deviceId = document.getElementById('deviceId').value || 'device1';
+            const deviceType = document.getElementById('deviceType').value || 'sensor';
+            const res = await fetch('/device-token', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ deviceId, type: deviceType })
+            });
+            const data = await res.json();
+            tokenDispositivo = data.token;
+            document.getElementById('tokenDispositivo').textContent = tokenDispositivo;
         }
 
-        async function obtenerInfoDispositivo() {
-            try {
-                const response = await fetch('/api/device/info');
-                const data = await response.json();
-                
-                if (response.ok) {
-                    let infoHTML = '<div class="info-grid">';
-                    
-                    // Información del Sistema Operativo
-                    infoHTML += `
-                        <div class="info-card">
-                            <h3>Sistema Operativo</h3>
-                            <p><strong>Nombre:</strong> ${data.sistemaOperativo.nombre}</p>
-                            <p><strong>Versión:</strong> ${data.sistemaOperativo.version}</p>
-                            <p><strong>Tipo:</strong> ${data.sistemaOperativo.tipo}</p>
-                            <p><strong>Arquitectura:</strong> ${data.sistemaOperativo.arquitectura}</p>
-                            <p><strong>Hostname:</strong> ${data.sistemaOperativo.hostname}</p>
-                        </div>
-                    `;
-
-                    // Información de Red
-                    data.red.forEach(interface => {
-                        infoHTML += `
-                            <div class="info-card">
-                                <h3>Interfaz: ${interface.interface}</h3>
-                                <p><strong>IP:</strong> ${interface.ip}</p>
-                                <p><strong>MAC:</strong> ${interface.mac}</p>
-                                <p><strong>Máscara:</strong> ${interface.netmask}</p>
-                            </div>
-                        `;
-                    });
-
-                    // Información de Hardware
-                    infoHTML += `
-                        <div class="info-card">
-                            <h3>Hardware</h3>
-                            <p><strong>Memoria Total:</strong> ${data.hardware.memoriaTotal}</p>
-                            <p><strong>Memoria Libre:</strong> ${data.hardware.memoriaLibre}</p>
-                            <p><strong>Procesadores:</strong> ${data.hardware.procesadores}</p>
-                        </div>
-                    `;
-
-                    infoHTML += '</div>';
-                    document.getElementById('deviceInfo').innerHTML = infoHTML;
-                } else {
-                    document.getElementById('deviceInfo').textContent = `Error: ${data.error}`;
-                }
-            } catch (error) {
-                document.getElementById('deviceInfo').textContent = `Error: ${error.message}`;
+        async function probarZeroTrust() {
+            if (!tokenUsuario || !tokenDispositivo) {
+                document.getElementById('respuestaProtegida').textContent = 'Genera ambos tokens primero.';
+                return;
             }
+            const res = await fetch('/api/devices', {
+                headers: {
+                    'User-Authorization': 'Bearer ' + tokenUsuario,
+                    'Device-Authorization': 'Bearer ' + tokenDispositivo
+                }
+            });
+            const data = await res.json();
+            document.getElementById('respuestaProtegida').textContent = JSON.stringify(data, null, 2);
         }
     </script>
 </body>

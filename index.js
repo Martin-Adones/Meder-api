@@ -4,9 +4,6 @@ const jwt = require('jsonwebtoken');
 const path = require('path');
 const app = express();
 const devicesRoutes = require('./routes/devices');
-const authRoutes = require('./routes/auth');
-const userRoutes = require('./routes/user');
-const deviceRoutes = require('./routes/device');
 
 // Middleware para parsear JSON
 app.use(express.json());
@@ -19,18 +16,22 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'test-tokens.html'));
 });
 
-// Ruta para obtener un token (simulación de login)
+// Endpoint para generar token de usuario
 app.post('/login', (req, res) => {
-    const user = { id: 1, username: 'admin' }; // Simulación
-    const token = jwt.sign(user, process.env.JWT_SECRET || 'clave_secreta_default', { expiresIn: '1h' });
+    const user = { id: 1, username: 'admin' };
+    const token = jwt.sign(user, process.env.JWT_SECRET, { expiresIn: '1h' });
+    res.json({ token });
+});
+
+// Endpoint para generar token de dispositivo
+app.post('/device-token', (req, res) => {
+    const device = { id: req.body.deviceId || 'device1', type: req.body.type || 'sensor' };
+    const token = jwt.sign(device, process.env.JWT_SECRET, { expiresIn: '1h' });
     res.json({ token });
 });
 
 // Rutas API
 app.use('/api/devices', devicesRoutes);
-app.use('/api/auth', authRoutes);
-app.use('/api/user', userRoutes);
-app.use('/api/device', deviceRoutes);
 
 // Manejador de errores
 app.use((err, req, res, next) => {
